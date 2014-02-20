@@ -5,7 +5,7 @@
 
 \usepackage{amsmath}
 \usepackage{color}
-
+\usepackage{listings}
 \input{macros}
 
 \setlength{\oddsidemargin}{0pt}
@@ -72,19 +72,100 @@ the problem.
 \problempart $\Theta( \log x \log y )$
 \problempart $\Theta(x\log y + y \log x)$
 \end{problemparts}
-\problem
+\problem Binary Search
 \begin{problemparts}
-\problempart This algorithm runs in O(n \log n )
+\problempart Running time of algorithm3
+It can be modeled by the following recurrance.\\
+T(n) = T(cross(n,1)) + T(getMax(n)) + T(getBiggestNeighbor, subproblem, ect) + T(n/2)\\
+T(n) = $n + n + c$ + T(n/2)\\
+If you were to expand the tree, each level of the tree (of which there would be log n of them), would have order n steps.  The running time would
+therefore be $O(n \log n)$
 \problempart Proof of Correctness\\
 Assuming the returned value is both a peak of it's subproblem and the maximum value in the column (of it's subproblem), then it must be a peak 
 of the entire problem.  The only way it would not be a peak is if an adjacent value was larger.  Inductively, we know that the value cannot be
 located within the subproblem, so we look to the parent problem.  If it were the case that the adjacent element in the larger array were bigger,
-then the program would not have looked in the subproblem (having either found the peak or searching on the other side).
+then the program would not have looked in the subproblem (having either found the peak or searched on the other side).
 \end{problemparts}
-\problem
-\problem
-\problem
+\problem Binary Search with Peaks
+\begin{problemparts}
+\problempart Running Time of Algorithm4
+The running time of this (incorrect) algorithm is $O(\log x \log y)$ where x and y are the dimensions of the matrix. \\
+The only variable time operation within each recursive call is the call to the algorithm1D find peak function, which runs in $O(\log n)$ time.  The algorithm's run time can be modelled as the following relation: \\
+T(x,y) = T(findpeak(y)) + T(x/2,y)\\
+T(x,y) = $\log n$ + T(x/2, y)\\
+When x = y = n, \\
+T(n) = $O( (\log n)^2 ) = O(\log n)$
+\problempart Counterexample\\
+$C = \begin{array}{ccccccc}
+0 & 1&2&3&4&5&6 \\
+1&2&3&4&5&6&7 \\
+2&3&4&5&6&7&8\\
+3&4&5&8&9&8&9\\
+4&5&6&7&10&12&13\\
+5&4&3&5&6&8&14\\
+6&7&8&22&21&20&19\\
+\end{array}$ 
+\\
+Algorithm 4 incorrectly returns 21 as the peak.  This is because 21 is the peak of the right three columns, and those columns were recursed into because the intital column (3) was only searched for a peak (8), which was less than the 9 to its right.  
+\end{problemparts}
+\problem Binary Search, Alternating Rows and Columns
+\begin{problemparts}
+\problempart Running Time\\
+This algorithm is dominated at each recursive call by finding the divider (with the cross product function) and finding the max within each row or column.  It can be modelled by the following relations:\\
+T(x) = x + T(y/2)\\
+T(y) = y + T(x/2)\\
+This approach is faster than algorithm3.  In order to subdivide the problem twice (thus reducing it to 1/4 its original size), this algorithm only needs x + y/2 time, as opposed to 2x time.  This trend continues, but only provides a constant factor speed up.  It is still asymptotically bounded by the same function, and is also $O(n \log n)$.
+\problempart Correctness\\
+This algorithm is incorrect.  Consider the matrix below as a counter example: \\
 
+$C = \begin{array}{ccccccc}
+0 & 1&2&10&9&8&6 \\
+1&2&3&11&8&6&7 \\
+2&3&4&12&7&7&17\\
+3&4&5&13&14&15&16\\
+4&5&6&10&10&12&13\\
+5&4&3&9&6&8&14\\
+6&7&8&8&21&20&19\\
+\end{array}$
+\\
+The algorithm incorrectly says that (2,3) is a peak.  The flaw in this algorithm is that when it subdivides the problem into smaller sections, it cannot guarentee that the peak of that section will be an actual peak because it does not check all of the adjacent problem.  This could be fixed by including the row or column that had the maximum in the subproblem.\\
+
+\end{problemparts}
+\problem Greedy Algorithm
+\begin{problemparts}
+\problempart Pseudocode\\
+Below is my pseudocode implementation of the greedy algorithm.  My pseudocode is a weird mix of C, English, and python.
+\lstset{language=Java, caption=Psuedocode}
+\begin{lstlisting}
+int row = 1, column = 1;
+int[] Points;
+while ( isNotPeak(Points, row, column) ) {
+   AdjacentPoints = all of the adjacent points
+ // between 2 and 4 depending on where edge is
+   for point in AdjacentPoints:
+       if ( point > current point ):
+          current point = point;
+}
+return (row, column)
+\end{lstlisting}
+\problempart Time Complexity\\
+The worst case running time of this algorithm would happen when there was a spiral of numbers.\\
+$C = \begin{array}{ccccccc}
+0 &0 &22 &21 &20 &19 &18 \\
+1 &0 &23 &0 &0  &0  &17 \\
+2 &0 &24 &0 &31  &0  &16\\
+3 &0 &25 &0 &30 &0  &15\\
+4 &0 &26 &28 &29 &0  &14\\
+5 &0 &0  &0 &0   &0  &13\\
+6 &7 &8  &9 &10  &11 &12\\
+\end{array}$
+\\
+In this case, the algorithm would run in $O(n^2)$ time because it has to search roughly half of the $n^2$ elements.  It is faster than a naive approach that searches all of the points for a peak, even in the worse case (the worse case for a naive case would be the peak is in the bottom right and it searched left to right top to bottom for all of the points, requiring $n^2$ steps exactly) because it skips many values.  If the matrix is a square, then it only needs to search $n + (n - 1) + (n - 1) + (n - 3) + (n - 3) + (n - 5) + (n - 5) + \cdots + 1$ values.  This is asymptotically identical to searching all of them, however.  A greedy algorithm that just picked a larger element (as opposed to the largest element) would have the same problem with the above example.\\
+\problempart Proof of Correctness\\
+The greedy algorithm must terminate because every matrix requires a peak (if a peak is defined as greater than or equal to all surrounding points). The algorithm's potential search space decreases by at least one point every iteration of the loop (it will never return to a previous position), unless it has found a peak.  Therefore, it must terminate.\\
+The algorithm is safe because it only returns values that are peaks, otherwise it loops further.\\
+Finally, since the algorithm only returns safe values and it must terminate, the algorithm is correct. 
+\end{problemparts}
 \section*{Part B}
 
 \emph{Submit your implemented python script.}
