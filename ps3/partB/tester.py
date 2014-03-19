@@ -253,7 +253,6 @@ try:
 
     start = time.time()
     imdb = IMDB(array_large, array_small, hash_functions.linear_probing_hash, hash_functions.double_hashing_hash)
-
     imdb_career_impact(imdb, "The Godfather", "James Caan", -1.41333333333)
     imdb_career_impact(imdb, "The Godfather", "Marlon Brando", -0.661428571429)
     print "\n"
