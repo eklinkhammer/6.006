@@ -16,10 +16,7 @@ class HashFunctions:
 		#
         # BEGIN YOUR CODE 
         #
-        
-		raise NotImplementedError
-		
-		##
+        return ( self.aux_h1( key, m) + i ) % m
         ## END STUDENT CODE
         ##
         
@@ -31,9 +28,11 @@ class HashFunctions:
         #
         # BEGIN YOUR CODE 
         #
-        
-		raise NotImplementedError
-		
+       # hash1 = self.aux_h1(key,m) % m
+       # hash2 = self.aux_h2(key,m) % m
+       # hash2 = hash2 * i
+       # return ( hash1 + hash2 ) %m
+        return ( self.aux_h1(key, m) + i*self.aux_h2(key, m) ) % m
 		##
         ## END STUDENT CODE
         ##
@@ -70,8 +69,18 @@ class OpenAddressedDictionary:
         #
         # BEGIN YOUR CODE 
         #
-        
-		raise NotImplementedError
+        m = len(self.array)
+        i = 0
+	while ( i < (m - 1) ):
+	    index = self.hash_function(key, i, m)
+            (k,v) = self.array[index]
+            if ( k == key ):
+                return False
+            if ( k  == None):
+		self.array[index] = (key, value)
+	        return True
+            i = i + 1
+        return False
 		
 		##
         ## END STUDENT CODE
@@ -89,9 +98,20 @@ class OpenAddressedDictionary:
         #
         # BEGIN YOUR CODE 
         #
-        
-		raise NotImplementedError
-		
+        m = len(self.array)
+        #if ( self.search(key) is None ):
+        #    return False
+        i = 0
+        while( i < (m - 1) ):
+            index = self.hash_function(key,i,m)
+            (k, value) = self.array[index]
+            if ( value is None):
+	        return False;
+            if ( key == k ):
+                self.array[index] = (None, "Placeholder_for_deletion")
+                return True
+            i = i + 1
+        return False 
 		##
         ## END STUDENT CODE
         ##
@@ -108,9 +128,17 @@ class OpenAddressedDictionary:
         #
         # BEGIN YOUR CODE 
         #
-        
-		raise NotImplementedError
-		
+        m = len(self.array)
+        i = 0
+        while( i < (m - 1) ):
+            index = self.hash_function(key,i,m)
+            (k,v) = self.array[index]
+            if ( v is None ):
+                return None
+            if ( k == key ):
+                return v
+            i = i + 1
+        return None
 		##
         ## END STUDENT CODE
         ##
@@ -147,17 +175,38 @@ class CuckooDictionary:
         #  Do not modify the dictionary in if insertion fails!
         #
         # TODO: Use cuckoo hashing to implement insert. Feel free to create helper methods.
-        
+
+
         if (self.search(key) is not None):
             return False
         else:
+
+
+
+	    # I put a line of code here. (not sure if the BEGIN your code statement is strict or not.)   
+            index = self.h1(key, self.m)
+
+
+
+
             for e in range(0, self.max_evicts):
                 #
 				# BEGIN YOUR CODE 
 				#
-				
-				raise NotImplementedError
-				
+                (current_key, current_val) = self.array[index]
+                self.array[index] = (key,value)
+                if ( current_key is None ):
+                    return True
+                else:
+                    # Where was old value stored
+                    key = current_key
+                    index_from_hash1 = self.h1(key, self.m)
+                    value = current_val		
+                    if ( index == index_from_hash1 ):
+                        index = self.h2(key, self.m)
+                    else:
+                        index = self.h1(key, self.m)
+            return False	
 				##
 				## END STUDENT CODE
 				##
@@ -195,9 +244,18 @@ class CuckooDictionary:
         #
         # BEGIN YOUR CODE 
         #
-        
-		raise NotImplementedError
-		
+        index1 = self.h1(key, self.m)
+        index2 = self.h2(key, self.m)
+        (k1, v1) = self.array[index1]
+        (k2, v2) = self.array[index2]
+        if ( k1 == key ):
+            self.array[index1] = (None, None)
+            return True
+        if ( k2 == key ):
+            self.array[index2] = (None, None)
+            return True
+        return False
+ 
 		##
         ## END STUDENT CODE
         ##
@@ -216,9 +274,15 @@ class CuckooDictionary:
         #
         # BEGIN YOUR CODE 
         #
-        
-		raise NotImplementedError
-		
+        index1 = self.h1(key, self.m)
+        (k1, v1) = self.array[index1]
+        if ( k1 == key ):
+            return v1
+        index2 = self.h2(key, self.m)
+        (k2, v2) = self.array[index2]
+        if ( k2 == key ):
+            return v2
+        return None
 		##
         ## END STUDENT CODE
         ##
@@ -288,9 +352,13 @@ class IMDB:
         #
         # BEGIN YOUR CODE 
         #
-        
-        raise NotImplementedError
-		
+	# Start with linear hashing
+        self.hash_films = OpenAddressedDictionary(array_small, linear_probing_hash)
+        self.hash_actors = OpenAddressedDictionary(array_large, double_hashing_hash)
+        for (name, films) in self.actors_list:
+            self.hash_actors.insert(name, films)
+        for (film, rating, year, actors) in self.films_list:
+            self.hash_films.insert(film, (rating, year))
 		##
         ## END STUDENT CODE
         ##
@@ -301,9 +369,25 @@ class IMDB:
         #
         # BEGIN YOUR CODE 
         #
-        
-		raise NotImplementedError
-		
+        films = self.hash_actors.search(actor)
+        (rating, year) = self.hash_films.search(film)
+        ratings_before = []
+	ratings_after = []
+        for f in films:
+            (r, y) = self.hash_films.search(f)
+            if ( not r == None ):
+                if ( y > year ):
+                    ratings_after.append(r)
+                else:
+        	    ratings_before.append(r)
+        if ( len(ratings_after) == 0 ):
+            return 0
+        average_after = mean(ratings_after)
+        if ( len(ratings_before) == 0 ):
+            average_before = 0
+        else:
+            average_before = mean(ratings_before)
+        return (average_after - average_before)
 		##
         ## END STUDENT CODE
         ##
