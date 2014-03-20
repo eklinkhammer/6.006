@@ -70,7 +70,7 @@ A hash table is a data structure that maps every object it stores (and can store
 
 In this way, the hash table knows where to put every object (neglected collisions for the moment) before it begins.  This is what saves time on the tasks.\\
 
-With regards to collisions, or when different objects are mapped to the same index, this can handled in different ways.  The two most obvious are through either an additional data structure (a list, for example, if insert is the desired fast operation) or through chaining, where the object is put into another slot in the hash table through some process (for example just putting it in the next open slot).\\
+With regards to collisions, or when different objects are mapped to the same index, this can handled in different ways.  The two most obvious are through either an additional data structure (a list, for example, if insert is the desired fast operation) in a process known as chaining, or by probing, where the object is put into another slot in the hash table through some process (for example just putting it in the next open slot).\\
 
 \problempart Algorithm Description\\
 The creation of a hash table from an unsorted array involves just iterating through the array once and mapping each element into the hash table.  To reduce collisions, I would create a table with size on the order of but slightly bigger than n, the number of elements in the array.  I would then hash them all individually.  Each hash has an amoritized cost of $O(1)$, so the entire array can be converted in $O(n)$ time.\\
@@ -94,32 +94,40 @@ The union of two sets is all of their elements, without duplicates.  Since the i
 
 It would be $O(n)$ to get the elements in each table, as before, and then $O(n)$ again to insert them into the new set. Again, this entire operation is $O(n)$.\\
 
+If the sets were of different sizes, say $n_1$ and $n_2$, then the total time would be $O(n_1 + n_2)$.\\
 \problempart Set Difference\\
 The set difference between sets A and B (A - B) would be all of the elements in A not also found in B.  \\
 
 This can be created by finding the intersection of A and B, and then iterating through all of the intersection points, deleting them from set A.  In practice, you could also copy set A and delete them from the copy, so as to preserve the original sets.  Either way, the intersection would be $O(n)$ as above, and the iterating and deleting would be $O(n)$ operations each taking $O(1)$ on average.  If you were creating a copy, that could be done in $O(n)$ time, so, regardless, the set difference operation can be done in $O(n)$ time.
 \end{problemparts}
-\end{problem}
+
 \problem Probabilistic Analysis of Hashing With Chaining\\
 \begin{problemparts}
 \problempart Expected Time of Search\\
-Given that those the worst possible case for hash table insertion happens, and all keys are hashed to the same value, the expected value for search is $\frac{(n+1)(n+2)}{2n}$.\\
-
-All values hashed are equally likely to be chosen by search, and the time for each of those values ranges from 1 to n. Addionally, it is possible that the value is not in the array (I define key space as potential keys, not keys in the set.  If this is a mistake, then the sum would only range to n).   Expected value is defined as: 
+Given a random key, it is equally likely to be map to any value.  For all but one of those values, it will immediately return false.  The expected value is calculated as follows:
 \begin{align*}
-E_{t} &= \sum_{i=1}^{n+1} p_t t_i\\
-&= \frac{1}{n} \sum_{i=1}^{n+1} i\\
-&= \frac{(n+1)(n+2)}{2n}
+E_{t} &= \sum_{h \in m} t(h) * p_h(h)\\
+E_{t} &= \sum_{i = 0}^{n} t(i) * p_h(i)\\
+E_{t} &= \sum_{i = 0}^{n-1} t(i) * p_h(i) + t(n)*p_h(n)\\
+E_{t} &= \sum_{i = 0}^{n-1} c * \frac{1}{m} + cn * \frac{1}{m}\\
+E_{t} &=  c \frac{n-1}{m} + c\frac{n}{m}\\
+E_{t} &= \frac{2n-1}{m}\\
+E_{t} &= O(1)
 \end{align*}
-You will notice this is essentially $\frac{n}{2}$, which makes sense, given that its a uniform distribution of between 1 and n time.
+The last line assumes that m and n are the same order (which they should be in a hash table).
 
 \problempart Expected Time for Successful Search\\
-The only difference between this and the previous part, as far as I can tell, is that it will never take $O(n+1)$ time when it doesn't find an element.  The expected value is calculated essentially the same, with the final answer being:$\frac{(n)(n+1)}{2n}$.\\
+In this case, the key is not random, but is one already present in the hash table.  Given that the hash table is essentially a linked list at this point, the expected time for a successful search is roughly $n/2$, and is $O(n)$.\\
+
+As before, the expected time to complete the search is the sum over all possible inputs of the time it would take to find that input and the probabiltiy of that time (from the definition of exepcted value).\\
+
 \begin{align*}
-E_{t} &= \sum_{i=1}^{n} p_t t_i\\
-&= \frac{1}{n} \sum_{i=1}^{n} i\\
-&= \frac{(n)(n+1)}{2n}
+E_{t} &= \sum_{i=1}^{n} p_t t_i\\ \\\text{All times have a probability of $\frac{1}{n}$}\\
+&= \frac{1}{n} \sum_{i=1}^{n} i\\ \text{The expected time of each element is the position of the element in the list.}\\
+&= \frac{(n)(n+1)}{2n}\\
+&= \frac{n+1}{2}
 \end{align*}
+That number is the middle of n, assuming n starts at 1.\\
 
 \problempart Expected Time for Search with normal inserts\\
 To determine the expected time for search, we first have to determine the average number of collisions for a given key value.\\
@@ -130,19 +138,27 @@ We define a new random variable $CH_i$ as the number of keys hashed to position 
 CH_i = \binom{n}{i}\left(\frac{1}{m}\right)^i \left(1 - \left(\frac{1}{m}\right)\right)^{n-i}\\
 \end{align*}
 
-Because it is a binomial, we know that the expected value is $\frac{n}{m}$.  Search is a constant time operation unless it runs into a collision.  Since the expected number of collisions is $\frac{n}{m}$, and the search is normally $O(1)$, the expected run time (not the worse case) of a successful search is $O(1) + \frac{n}{m}$.\\
+Because it is a binomial, we know that the expected value is $\frac{n}{m}$.  Search is a constant time operation unless it runs into a collision.  Since the expected number of collisions is $\frac{n}{m}$, the expected run time (not the worse case) of a successful search is the time per collision (constant) times the number of expected collisions (constant in this case) - $O( \frac{n}{m}) = O(1)$.\\
 \end{problemparts}
-\end{problem}
 \problem Meandering Hashes
 \begin{problemparts}
 
 \problempart Naive Brute Force\\
 Assuming only one orientation is acceptable, you would have to perform up to $k^2$ checks at each of the potential starting positions of the smaller array, of which there are $(n-k)^2$.  The running time is then $O( (n-k)^2k^2)$, which, since n is much larger than k, simplifies to $O( (nk)^2)$.\\
 
-\problempart Algorithm Description\\
-A rolling hash could be used here in a similar way as the 1-D case. The entire target matrix could be hashed and the value stored.  Then, a hash could be computed for the inital k by k block.  Then, the hash would roll across the row, each time computing the value of the window that contains k different elements (a new column).  Since hash values are integers, and relatively easy to store compared to the matrices being operated on, it makes more sense to store the hash values for the row.  Now the window is rolled down one row (k new elements in the roll), but then is rolled across the row, one new element at a time.  However, the rolling hash still has to make k updates (k-1 from the top, 1 at the bottom).  .\\
+If additional orientations desired, you can rotate the matrices accordingly and recompute. That won't change the algorithmic complexity.\\
 
-The algorithm's code below assumes that the hash function works in such a way that elments can be rolled off the top and onto the bottom.
+\problempart Algorithm Description\\
+A rolling hash could be used here in a similar way as the 1-D case. The entire target matrix could be hashed and the value stored.  Then, a hash could be computed for the inital k by k block.  Then, the hash would roll across the row, each time computing the value of the window that contains k different elements (a new column).\\
+
+You could store the hash values already computed (in a n-k x n-k matrix) and this way always roll the hash "down," but it should be equally efficient to simply go back and forth across the matrix, going down one row each time.\\
+
+I could see storing as you go being easier to run in parallel, but they're the same complexity.  If desired, this would need only $O(1)$ memory on the side.\\
+
+The algorithm's code below assumes that the hash function works in such a way that elments can be rolled off the top and onto the bottom and off the left side and onto the right side.  I cannot immediately think of a hash function that would allow for this in a simple mannor.  If such a method of rolling hashes does not exist, then calculate the entire row and go down all possible columns.\\  
+
+That would take more time ($nk^2$) for the first row, but it would be the same asymptotically.\\
+
 \problempart Pseudocode\\
 \begin{lstlisting}
 int 2D compare( S, T )
@@ -151,19 +167,26 @@ int 2D compare( S, T )
 	for rows in range(n-k-1):
 		rolling_hash.remove(top_row) # Roll off top k values
 		rolling_hash.add(new_row) # Roll on k values
+		temp <- rolling_hash
 		for cols in range(n-k -1):
 			rolling_hash = rolling_hash.remove(old_column)
 			rolling_hash = rolling_hash.add(new_column)
 			check rolling_hash with T:
 				if match, compare element by element
-		rolling_hash = the value it was before going across
+		rolling_hash = temp
 \end{lstlisting}
 
+As described above, this computes a hash function for every square sub matrix of order k in the larger matrix.  The only reason this is more efficient than the brute force method is that the hash can be computed in $O(k)$ steps instead of $O(k^2)$ steps.\\
+
+The temporary variable is used to start again on the left side of the matrix.  It is equally possible to traverse back and forth, but that is harder to code in a simple loop.
 \problempart Time Complexity \\
-This algorithm will run in $O(kn^2 + k)$.  It must do the initial calculation and the final one (hopefully just one) that both take $O(k)$.  The algorithm then does $(n-k)^2$ rolls, but each roll involves k steps.  Therefore, the hash rolling and comparison will take $O(kn^2)$.  Finally, the constant time to check if the equality is a collision will bring up the running time to $O(kn^2 + k)$.\\
+This algorithm will run in $O(kn^2 + k)$.  It must do the initial calculation and the final one (hopefully just one) that both take $O(k)$.  The algorithm then does $(n-k)^2$ rolls, but each roll involves k steps.  Therefore, the hash rolling and comparison will take $O(kn^2)$.  Finally, the constant time to check if the equality is a collision or the real value will bring up the running time to $O(kn^2 + k)$.\\  
+
+This is asymptotically faster than $O(kn^2 + k)$
 
 \problempart Space Complexity \\
-This algorithm should use $O(1)$ space, seeing as it only has to store a few integers (hash(T), the value of the one on the left most column (to go down), and the current rolling hash value.
+This algorithm should use $O(1)$ space, seeing as it only has to store a few integers (hash(T), the value of the one on the left most column (to go down), and the current rolling hash value.\\
+
 \end{problemparts}
 \end{problems}
 
