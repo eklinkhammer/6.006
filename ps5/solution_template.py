@@ -1,5 +1,4 @@
 import argparse, math, sys, ast, time
-
 # PART A: Fill in below the code for part a
 def dijkstra(N, adjacency_list, source):
     # Init parent pointers
@@ -31,13 +30,31 @@ def dijkstra(N, adjacency_list, source):
                 distances[j] = path
                 parents[j] = node
                 queue.insert(j,path)
-                queue.decrease_priority(j,path) # Lazy way to avoid checking for j presence
+                queue.decrease_priority(j,path) # Lazy way to avoid checking for j presence.
+		# Literally doubles the time of this step
                
     return res
 
 # PART B: Fill in below the code for part b
 def shortest_path(N, coords, roads, plant_index, dump_index):
-    return None
+    # Construct an adjacency list
+    adj_list = [None]*N
+    for i in range(N):
+	adj_list[i] = []
+    for (a,b) in roads:
+        (xa, ya) = coords[a]
+        (xb, yb) = coords[b]
+        manhattan_road = math.sqrt( pow(xa - xb,2) + pow(ya - yb,2 ))
+        adj_list[a].append( (b, manhattan_road) )
+    shortest_paths = dijkstra(N, adj_list, plant_index)
+    path = []
+    (distance, parent) = shortest_paths[dump_index]
+    path.append(dump_index)
+    while ( parent != plant_index ):
+        path = [parent] + path
+        (distance, parent) = shortest_paths[parent]
+    path = [plant_index] + path
+    return path
 
 # PART C: Fill in below the code for part c
 def closest(N, coords, roads, plant_index, dump_indices, k):
