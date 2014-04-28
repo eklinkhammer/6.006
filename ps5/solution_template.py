@@ -60,63 +60,10 @@ def shortest_path(N, coords, roads, plant_index, dump_index):
         (distance, parent) = shortest_paths[parent]
     path = [plant_index] + path
     return path
-
-#Quick Select.  Note, this is not my original idea.
-# I "translated" this from some java I found online.
-# link: http://blog.teamleadnet.com/2012/07/quick-select-algorithm-find-kth-element.html
-# If this is not allowed, I will edit accordingly (if there is some auto dectection for this.  I will ask TA before Tuesday deadline)
-#Change to some heaps of defined size if needed
-def quick_select(a, k):
-    left = 0
-    right = len(a) - 1
-    while ( left < right ):
-        r = left
-        w = right
-        mid = a[ (left + right)/2]
-        while ( r < w ):
-            if ( a[r] >= mid ):
-                temp = a[w]
-                a[w] = a[r]
-                a[r] = temp
-                w -= 1
-	    else:
-                r += 1
-        if ( a[r] > mid ):
-            r -= 1
-        if ( k <= r):
-            right = r
-        else:
-            left = r + 1
-    return a[:k]
  
 # PART C: Fill in below the code for part c
 def closest(N, coords, roads, plant_index, dump_indices, k):
     adjacency_list = getAdjList(N, coords, roads)
-    """paths = dijkstra(N, adj_list, plant_index)
-    # Finds all of the closest paths
-    #dump_paths = []
-    #for i in dump_indices:
-    #   dump_paths.append(paths[i])
-    # Quick Select top k paths
-    #top_k = quick_select(dump_paths,k)
-    # Now sorts them based on index
-    # Need to know indices
-    selectable = []
-    #print dump_indices
-    for i in dump_indices:
-        (distance, parent) = paths[i]
-        x = (distance, i)
-        selectable.append(x)
-    #print selectable 
-    top_k = quick_select(selectable, k)
-    #print top_k
-    answer = []
-    for (dis, index) in top_k:
-        answer.append(index)
-    #print answer
-    answer.sort()
-    #print answer
-    return answer"""
     source = plant_index
     counter = 0
     # Init parent pointers
