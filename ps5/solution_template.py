@@ -2,7 +2,38 @@ import argparse, math, sys, ast, time
 
 # PART A: Fill in below the code for part a
 def dijkstra(N, adjacency_list, source):
-    return None
+    # Init parent pointers
+    parents = [None] * N
+    parents[source] = -1
+    # Init distances
+    distances = [float("inf")] * N
+    distances[source] = 0
+    # Init Queue
+    queue = PriorityQ()
+    queue.insert(source,0)
+
+    # Dictionary that keeps track of whats in Q and S
+    Q = {}
+    # Init Answers
+    res = [(None,None)] * N
+    res[source] = (0, -1)
+    # While Queue is not empty
+    #     Take element. Process it
+    #		Add all of its descendents (updating parent pointers and d[u]s if necessary) to queue
+    while ( queue.size() != 0 ):
+        node = queue.extract_min()
+        du = distances[node]
+        res[node] = (du,parents[node])
+        node_adj_list = adjacency_list[node]
+        for (j, weight) in node_adj_list:
+            path = du + weight
+ 	    if ( distances[j] > path):
+                distances[j] = path
+                parents[j] = node
+                queue.insert(j,path)
+                queue.decrease_priority(j,path) # Lazy way to avoid checking for j presence
+               
+    return res
 
 # PART B: Fill in below the code for part b
 def shortest_path(N, coords, roads, plant_index, dump_index):
