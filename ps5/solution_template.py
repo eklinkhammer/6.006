@@ -35,17 +35,22 @@ def dijkstra(N, adjacency_list, source):
                
     return res
 
-# PART B: Fill in below the code for part b
-def shortest_path(N, coords, roads, plant_index, dump_index):
-    # Construct an adjacency list
+def getAdjList(N, coords, roads):
     adj_list = [None]*N
     for i in range(N):
-	adj_list[i] = []
+        adj_list[i] = []
     for (a,b) in roads:
         (xa, ya) = coords[a]
         (xb, yb) = coords[b]
+	# Misread that. Not Manhattan distance
         manhattan_road = math.sqrt( pow(xa - xb,2) + pow(ya - yb,2 ))
         adj_list[a].append( (b, manhattan_road) )
+    return adj_list
+
+# PART B: Fill in below the code for part b
+def shortest_path(N, coords, roads, plant_index, dump_index):
+    # Construct an adjacency list
+    adj_list = getAdjList(N, coords, roads)
     shortest_paths = dijkstra(N, adj_list, plant_index)
     path = []
     (distance, parent) = shortest_paths[dump_index]
@@ -56,13 +61,124 @@ def shortest_path(N, coords, roads, plant_index, dump_index):
     path = [plant_index] + path
     return path
 
+#Quick Select.  Note, this is not my original idea.
+# I "translated" this from some java I found online.
+# link: http://blog.teamleadnet.com/2012/07/quick-select-algorithm-find-kth-element.html
+# If this is not allowed, I will edit accordingly (if there is some auto dectection for this.  I will ask TA before Tuesday deadline)
+#Change to some heaps of defined size if needed
+def quick_select(a, k):
+    left = 0
+    right = len(a) - 1
+    while ( left < right ):
+        r = left
+        w = right
+        mid = a[ (left + right)/2]
+        while ( r < w ):
+            if ( a[r] >= mid ):
+                temp = a[w]
+                a[w] = a[r]
+                a[r] = temp
+                w -= 1
+	    else:
+                r += 1
+        if ( a[r] > mid ):
+            r -= 1
+        if ( k <= r):
+            right = r
+        else:
+            left = r + 1
+    return a[:k]
+ 
 # PART C: Fill in below the code for part c
 def closest(N, coords, roads, plant_index, dump_indices, k):
-    return None
+    adjacency_list = getAdjList(N, coords, roads)
+    """paths = dijkstra(N, adj_list, plant_index)
+    # Finds all of the closest paths
+    #dump_paths = []
+    #for i in dump_indices:
+    #   dump_paths.append(paths[i])
+    # Quick Select top k paths
+    #top_k = quick_select(dump_paths,k)
+    # Now sorts them based on index
+    # Need to know indices
+    selectable = []
+    #print dump_indices
+    for i in dump_indices:
+        (distance, parent) = paths[i]
+        x = (distance, i)
+        selectable.append(x)
+    #print selectable 
+    top_k = quick_select(selectable, k)
+    #print top_k
+    answer = []
+    for (dis, index) in top_k:
+        answer.append(index)
+    #print answer
+    answer.sort()
+    #print answer
+    return answer"""
+    source = plant_index
+    counter = 0
+    # Init parent pointers
+    parents = [None] * N
+    parents[source] = -1
+    # Init distances
+    distances = [float("inf")] * N
+    distances[source] = 0
+    # Init Queue
+    queue = PriorityQ()
+    queue.insert(source,0)
+
+    # Dictionary that keeps track of whats in Q and S
+    Q = {}
+    # Init Answers
+    res = [(None,None)] * N
+    res[source] = (0, -1)
+    answer = []
+    # While Queue is not empty
+    #     Take element. Process it
+    #           Add all of its descendents (updating parent pointers and d[u]s if necessary) to queue
+    while ( queue.size() != 0 ):
+        node = queue.extract_min()
+        if ( node in dump_indices ):
+            counter += 1
+            answer.append(node)
+            if ( counter >= k ):
+                break
+        du = distances[node]
+        res[node] = (du,parents[node])
+        node_adj_list = adjacency_list[node]
+        for (j, weight) in node_adj_list:
+            path = du + weight
+            if ( distances[j] > path):
+                distances[j] = path
+                parents[j] = node
+                queue.insert(j,path)
+                queue.decrease_priority(j,path)
+    answer.sort()
+    return answer
 
 # PART D: Fill in below the code for part d
 def least_spillage(N, adjacency_list, plant_index, dump_index):
-    return None
+    # Edge length is -log of spillage factor
+    adj_list_new = []
+    for node_list in adjacency_list:
+        nl = []
+        for (j, weight) in node_list:
+            new_val = (j, math.log(weight)*-1)
+            nl.append(new_val)
+        adj_list_new.append(nl)
+    shortest_paths = dijkstra(N, adj_list_new, plant_index)
+    path = []
+    (distance, parent) = shortest_paths[dump_index]
+    path.append(dump_index)
+    while ( parent != plant_index ):
+        path = [parent] + path
+        (distance, parent) = shortest_paths[parent]
+    path = [plant_index] + path
+    return path
+
+    return shortest_path(N, adj_list_new, plant_index, dump_index)
 
 ######################################
 # DO NOT CHANGE CODE BELOW THIS LINE #
@@ -229,7 +345,8 @@ if __name__ == '__main__':
             sys.stderr.write("Running test " + str(test) + " for part " + part + ":\n")
 
             input_file = "test_part_" + part + "_" + str(test) + ".in"
-
+	    #if ( part == 'C' and test == 2 ):
+	#	sys.exit()
             start_time = time.time()
             student_res = run_from_file(input_file, part)
             end_time = time.time()
