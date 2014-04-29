@@ -1,0 +1,12 @@
+digraph before {
+	rankdir = LR
+	ranksep = 0.25
+	node [penwidth = 0.5, shape = circle, width = 0.4,fixedsize = true, fontsize = 10]
+	edge [arrowsize = 0.5, penwidth = 0.5]
+
+	s -> w;
+	w -> u;
+	w -> v;
+	u -> w;
+}
+
