@@ -1,0 +1,105 @@
+%
+% 6.006 problem set 6 solutions template
+%
+\documentclass[12pt,twoside]{article}
+
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{graphicx}
+
+\input{macros}
+
+\setlength{\oddsidemargin}{0pt}
+\setlength{\evensidemargin}{0pt}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{0in}
+\setlength{\textheight}{8.5in}
+
+\newcommand{\theproblemsetnum}{6}
+\newcommand{\releasedate}{Thursday, April 29}
+\newcommand{\partaduedate}{Friday, May 9}
+\newcommand{\tabUnit}{3ex}
+\newcommand{\tabT}{\hspace*{\tabUnit}}
+
+\title{6.006 PSET 6}
+
+\begin{document}
+
+\handout{Problem Set \theproblemsetnum}{May 9, 2014}
+
+\textbf{All parts are due {\bf \partaduedate} at {\bf 11:59PM}}.
+%
+Please download the .zip archive for this problem set, and refer to the
+\texttt{README.txt} file for instructions on preparing your solutions.
+%
+Remember, your goal is to communicate. Full credit will be given only
+to a correct solution which is described clearly. Convoluted and
+obtuse descriptions might receive low marks, even when they are
+correct. Also, aim for concise solutions, as it will save you time
+spent on write-ups, and also help you conceptualize the key idea of
+the problem.
+
+\setlength{\parindent}{0pt}
+
+\medskip
+
+\hrulefill
+
+\medskip
+
+{\bf Your Name:} Eric Klinkhammer
+
+\medskip
+
+{\bf Collaborators:} George Cheng, Yang Dai
+
+\medskip
+
+\hrulefill
+
+\lstset{language=python}
+
+\begin{problems}
+
+\section*{Part A}
+\problem Problem 6-1
+\begin{problemparts}
+\problempart Naive Recursive Approach\\
+This problem asks to find the shortest path of length k between two nodes.  We know that the shortest path of length k must have, as its final node, a node that connects with a single edge to the target node.  We can then ask the question, if we know the shortest path of length k-1 to every node that connects to the target node, which of those nodes would be in the best path.  Once the node is identified, we can repeat this reasoning with that node as the target node.\\
+
+\begin{lstlisting}
+def DP_Biking(depth, source, target, reverse_adj_list):
+  min = infinty
+  if ( depth == 0 and source == target ): 
+    return 0
+  else if ( depth == 0 ):
+    return infinity
+  for u in reverse_adj_list[target]:
+    path_length = DP_Biking(depth - 1, source, u, reverse_adj_list) + weight(target, u)
+    if ( path_length < min ):
+      min = path_length
+  return path_length
+\end{lstlisting} 
+\problempart Dynamic Programming\\
+\problempart Dynamic Programming: Bottom Up Approach\\
+\problempart Memoized vs Bottom Up\\
+\problempart Best Path\\
+\end{problemparts}
+\problem Dijkstra Properties and Proofs
+\begin{problemparts}
+\problempart Base Case\\
+\problempart $\delta_s(s,w) = \delta(s,w)$ before iteration\\
+\problempart Part 1 of Invariant Holds After Iteration\\
+\problempart Part 2 of Invariant Holds After Iteration\\
+\problempart $u \in S$ and $v \in Q$ then $\delta(u) \le \delta(v)$\\
+\end{problemparts}
+\problem Hobbits' Gold II
+\begin{problemparts}
+\problempart IOUs and Infinite Cycles\\
+\problempart Infinite Cycles Without IOUs\\
+\problempart Enough Gold\\
+\end{problemparts}
+\end{problems}
+
+\end{document}
