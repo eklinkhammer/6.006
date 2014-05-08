@@ -76,29 +76,184 @@ def DP_Biking(depth, source, target, reverse_adj_list):
   else if ( depth == 0 ):
     return infinity
   for u in reverse_adj_list[target]:
-    path_length = DP_Biking(depth - 1, source, u, reverse_adj_list) + weight(target, u)
+    path_length = DP_Biking(depth - 1, source, u, 
+	reverse_adj_list) + weight(target, u)
     if ( path_length < min ):
       min = path_length
   return path_length
-\end{lstlisting} 
+\end{lstlisting}\\
+
+The reverse adjacency list is a list of the reverse of all the edges in a graph (tells what points to each node in the original graph).  It can be constructed in $O(|E|)$.  Depending on the connectedness of the graph, this approach can become exponentionally impossible, with a running time of $O(n^k)$ because each level of the recursion can create up to n new subproblems per problem.\\   
 \problempart Dynamic Programming\\
+We can make use of memoization to prevent recalculating values.  Within the recursive tree, you can encounter a given node at precisely k unique situations.  In other words, for a given node, you only need to know the score of a the shortest path to that node for all k paths (shortest length 1 path, shortest length 2 path $\cdots$ length k path).\\
+
+\begin{lstlisting} 
+
+create table that maps (u, depth) --> shortest path
+
+def DP_Biking(depth, source, target, reverse_adj_list):
+  min = infinty
+  if ( depth == 0 and source == target ): 
+    return 0
+  else if ( depth == 0 ):
+    return infinity
+  for u in reverse_adj_list[target]:
+    if ( table[u,depth] == null ):
+    	path_length = DP_Biking(depth - 1, 
+	source, u, reverse_adj_list) + weight(target, u)
+	table[u,depth] = path_length
+    else:
+	path_length = table[u,depth] + weight(target,u)
+    if ( path_length < min ):
+      min = path_length
+  table[source, depth] = path_length
+  return path_length
+\end{lstlisting}\\
+
+Because of the memoization, you can only make a recursive call if that value in the table has not been filled.  However, ever call to the function fills at least one entry in the table.  For any given call to the function at a depth k, it will do $O(|E|)$ work (looping through each value).  It will then do $O(1)$ work  (either with a table lookup or with a base case).  This approach will be $O(kE)$, or $O(nk)$.  It is psuedo-linear because of the dependence on the problem specifications.\\
 \problempart Dynamic Programming: Bottom Up Approach\\
-\problempart Memoized vs Bottom Up\\
+Using a bottom up approach with dynamic programming, we can use an approach similar to breath first search.\\
+
+Starting from the source node, we explore each connected node.  If the path through a given node for a given path length is shorter than the existing path length stored for that node, length pair, then that value is stored and that destination node is added to the queue of nodes to be explored (with its k value).\\
+
+\begin{lstlisting}
+
+k_max is the k of the goal path
+
+best_path_lengths = table that maps 
+(node, depth) ---> (shortest path, parent)
+initizalize best_path_lengths to infinity
+
+best_path_lengths[source, 0] = 0
+
+Q = new Queue()
+Q.append( (source, 0) )
+
+while ( Q is not empty ):
+  (u, depth) = Q.extract()
+  if ( depth >= k_max ):
+    continue
+  for v in u.adjList():
+    dist = weight(u,v) + best_path_lengths[u, depth]
+    if ( dist < best_path_lengths[v, depth + 1 ] ):
+      best_path_lengths[v, depth + 1] = (dist, u)
+      Q.append( (v, depth + 1) )
+\end{lstlisting}\\
+
+This algorithm explores every possible node up to k times, for a running time of $O(nk)$.  This can be verified by observing that there are a total of n*k entries in the memo table, and since the algorithm runs bottom up, each step is guarenteed to have all dependent steps filled, so filling each new table entry is $O(1)$.\\
+  
+\problempart Recursive vs Bottom Up\\
+The bottom-up approach explores in all possible directions from the source, while the recurisve version explores in reverse from the destination.  While there are situations where both of those can be better or worse, for an example of when the memoized algorithm performs better, consider a graph with only a single path from the source to the destination, but a maze of interconnected nodes unreachable by the destination node.  The bottom-up approach will consider all of the nodes, while the recursive approach will only have one choice.  \\
+
+More generally, both approaches suffer in a more fully connected graph, but if the recursive one does better with a connected region near the start node, and the bottom-up one does better with a connected region near the destination.  This is because the depth bottoms out (reaches k) before exploring large amounts of nodes (either recursively or adding to queue).\\
+
 \problempart Best Path\\
+To find the best path between two nodes that has a set number of edge lengths, we can simply use the bottom-up algorithm above as is.  When it completes, follow the parent pointers back to the source node.  Note, that while normally parent points are followed back linearly, this time the parent pointer points to k values, so the proper one must be selected each time.  As an example, the parent pointer stored at (destination, k) has, itself, k different parents depending on the length of the path, so once the node in the path is determined, its parent pointer can be found at (node, k-1).\\
+
+Following the pointers back takes linear time, so finding the best path is dominated by the $O(nk)$ time of the dynamic algorithm.  In terms of $V$ and $E$, this algorithm runs in $O(k(|V|+|E|))$ time.\\
 \end{problemparts}
-\problem Dijkstra Properties and Proofs
+\problem Geometric Progression
 \begin{problemparts}
-\problempart Base Case\\
-\problempart $\delta_s(s,w) = \delta(s,w)$ before iteration\\
-\problempart Part 1 of Invariant Holds After Iteration\\
-\problempart Part 2 of Invariant Holds After Iteration\\
-\problempart $u \in S$ and $v \in Q$ then $\delta(u) \le \delta(v)$\\
+\problempart Simple Approach\\
+The simplest way to find a geometric progression among a list of numbers is to sort the numbers first, and then, with every pair of numbers, see how many numbers would follow the pair in a geometric progression.\\
+
+\begin{lstlisting}
+n = list of numbers
+n = n.sort()
+max = 0
+
+for i in range(1,n):
+  for j in range(i,n):
+    if ( n[j] % n[i] != 0 ):
+      continue
+    temp_j = n[j]
+    count = 2
+    for k in range(j,n):
+      if ( temp_j % n[k] == 0 and 
+		n[k] / temp_j == n[j]/n[i] ):
+        count++
+        temp_j = n[k]
+    if ( count > max ):
+      max = count
+\end{lstlisting}
+
+The running time of this algorithm is $O(n^3)$.  Because of how inefficient it is, the choice of sorting algorithm isn't important, although you can assume quicksort is used, for a worst case $O(n^2)$ sorting time.\\
+
+\problempart Warm up - Geometric Trios\\
+Given a number j, and a sorted list of elements (call the list N) ranging from 2 to n-1, we need to find all pairs (i,k) such that the triplet (i,j,k) is a geometric series.\\
+
+A geometric trio of numbers is one in which $\frac{j}{i} = \frac{k}{j}$.  Therefore, mapping those quotient values to a list of numbers will associate together the appropriate i and k per quotient entry in the hash table.  I think the code will be clearer.\\
+
+\begin{lstlisting}
+n is a list of sorted numbers
+j is the middle value in the geometric progession
+
+table maps quotients ---> lists
+
+for x in n:
+  if ( j % x == 0 ):
+    table[j/x].append(x)
+  if ( x % j == 0 ):
+    table[x/j].append(x)
+
+pairs = []
+for k in table.keys():
+  if len(table[k]) == 2:
+    pairs.append(table[k])
+\end{lstlisting}
+
+This algorithm runs in $O(n)$ time because it is iterating through a list and doing constant work each time.\\
+
+\problempart Finding Geometric Progressions Efficiently\\
+Now, we will find the size of the largest geometric progression more efficiently.\\
+
+In part b of this question, we determined that it was possible to construct a table that linked, for a particular number j, the multiplicative factor of the geometric series with a pair of numbers i and k such i,j,k formed a geometric series  in $O(n)$ time.  This means that such a table could be constructed for all n values in $O(n^2)$ time.  Crucially, access to any element in this table can be done with two successive hashes (or clever indexing), so determining if an given j is in a geometric trio that progresses with a factor of f can be found in $O(1)$ time.\\
+
+Now, using that table, we will determine the length of the largest sequence.  For this step, we will use a table of size $n^2$ that represents every possible combination of factor and number (if every number could divide every other number, there would be $n^2$ combinations).  The table maps the number-factor pair to a the length of the geometric sequence from that point onward in the sequence.  At this point, the subproblem becomes clear.  For a given number j, the length of geometric sequence from that point onward is 1 + the length of the geometric series from k.\\
+
+\begin{lstlisting}
+N is a sorted list of numbers.
+
+dict is hash table of hash tables
+the first maps numbers in N --> hash table
+	that table maps quotients ---> (i,k) pairs
+
+for j in N:
+  table_j = dict[j]
+  for x in N:
+    if ( j % x == 0 ):
+      table_j[j/x].append(x)
+    if ( x % j == 0 ):
+      table_j[x/j].append(x)
+
+len_geo_seq = {}
+# maps a (number, factor) tuple to the lenght of the sequence
+  
+for j in N.reverse():
+  for (i,k) in dict[j]:
+    f = k / j
+    if ( len_geo_seq[k,f] == null ):
+      len_geo_seq(k,f) = 1
+    len_geo_seq[j,f] = 1 + len_geo_seq[k,f] 
+
+# Need to offset by 1 whatever the max is (since never
+#	look at i)
+max = 0
+for lengths in len_geo_seq:
+  if ( lengths > max ):
+    max = lengths
+
+return max + 1
+
+\end{lstlisting}
+The running time of this algorithm is $O(n^2)$.  As stated above, the construction of the table of tables of lists is done in $O(n^2)$ time (with $O(n)$ per number).  The sorting and reversing of the lists doesn't contribute to the complexity of the algorithm, with run times of $O(n \log n)$ and $O(n)$ respectively.  The interesting part of the algorithm, the construction of the table mapping each number and factor to a maximum length sequence runs in $O(n^2)$.  There are two ways to think about this problem.  The first is by considering the size of the table that has to be constructed - it will be on $O(n^2)$ because there are n numbers and potentially $O(n)$ factors per number.  The other way is by looking at the loops. The outer loop loops n times, while the inner loop loops at most n times, for a total of the inner loop body running $O(n^2)$ times.  The body runs in constant time because it is just 4 lines of code.  Because the array is being traversed backwards, the maximum lengths are being built bottom up in only $O(1)$ operations.\\
+
+The final step, the traversal of the table to determine the maximum, also takes $O(n^2)$ time since that is the size of the table.\\
 \end{problemparts}
-\problem Hobbits' Gold II
+\problem Gene Alignment
 \begin{problemparts}
-\problempart IOUs and Infinite Cycles\\
-\problempart Infinite Cycles Without IOUs\\
-\problempart Enough Gold\\
+\problempart Highest Scoring Alignment\\
+\problempart Highest Scoring Substrings\\
 \end{problemparts}
 \end{problems}
 
