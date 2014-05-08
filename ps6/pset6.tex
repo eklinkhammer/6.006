@@ -253,7 +253,82 @@ The final step, the traversal of the table to determine the maximum, also takes 
 \problem Gene Alignment
 \begin{problemparts}
 \problempart Highest Scoring Alignment\\
+This problem is very similar to the most common subsequence problem described in lecture, and it is from that lecture that I got most of the ideas for this problem.\\
+
+When considering two vectors x and y and the highest scoring alignment, one must consider, for each pair of letters, what operation will result in the highest score.  The operation score, however, has a component that depends on the remaining vector suffix.  This is where dynamic programming comes in.  There are only m*n possible combinations of different suffixes, so what would involve many exponential recurisve calls can be done with memoization.\\
+
+The subproblem can be defined as follows: the highest score for a given suffix of x and y.  The solution to that problem can also be defined in terms of that same subproblem (with slightly smaller suffixes).  Therefore, the algorithm will be as described below:\\
+
+\begin{lstlisting}
+init table: will map (a,b) ---> score where a
+  is the start of a suffix in x, b is the start of
+  a suffix in y, and score is the alignment score of
+  those suffixes.
+
+x and y are DNA strings
+
+d is the scoring matrix for a pair of letters, including gaps
+
+def DP_Genes(a,b):
+  if ( table(a+1,b) != null ):
+    gap_score = d(x[a], '--') + table(a+1,b)
+  else:
+    gap_score = d(x[a], '--') + DP_Genes(a+1,b)
+  if ( table(a+1, b+1) != null): #Can also be mismatch
+    match_score = table(a+1, b+1) + d(x[a],y[b])
+  else:
+    match_score = d(x[a],y[b]) + DP_Genes(a+1,b+1)
+  if ( table(a, b+1) != null ):
+    other_gap = d('--', y[b] ) + table(a, b+1)
+  else: 
+    other_gap = d('--', y[b] ) + DP_Genes(a, b+1)
+  table[a,b] = max(gap_score, match_score, other_gap)
+  return table[a,b]
+\end{lstlisting} 
+
+THe running time of this algorithm is $O(mn)$.  The number of subproblems is mn because there are only nm possible different suffix combinations (m  positions in string x, n positions in string y).  Each subproblem is $O(1)$ time because, assuming all the subproblems are solved, there are only 12 lines of cod.
 \problempart Highest Scoring Substrings\\
+This problem is asking for the highest scoring substring of x and y.  From the problem above, we have a memo table that records the scores of every suffix combination.  From that, determine the maximum score for a given a and b by simply iterating through the table (since it is size mn, this will take $O(mn)$ time). Now, we can repeat the above step with just the reverse of the optimum suffixes to get the indecies that correspond to the end of the substring.  This will take order $O( (m-a) (n-b)i )$ time. \\
+
+Starting with strings x and y of length m and n respectively, find the indices a and b that correspond to the maximum scoring suffixes.  This means that $x[a:]$ and $y[b:]$ are the best scoring suffixes.  Define x' and y' as $x[a:]$ and $y[b:]$.  Reverse x' and y'.  Repeating the process with x' and y' will get you two new indices, c and d, that correspond to the best length suffixes of x' and y' (so $x'[c:]$ and $y'[d:]$).  Those suffixes are the optimum substrings of the original string.\\
+
+\begin{lstlisting}
+table_x_and_y = new table()
+# maps (a,b) ---> score
+
+DP_Genes(0,0)
+
+(a,b) = getMaxIndex(table_x_and_y)
+
+x = x[a:]
+y = y[b:]
+x.reverse()
+y.reverse()
+
+reset table
+
+DP_Genes(0,0)
+
+(c,d) = getMaxIndex(table_x_and_y)
+
+x = [c:]
+y = [d:]
+x.reverse()
+y.reverse()
+return x,y
+
+def getMaxIndex(table):
+  max = 0
+  for (i,j) in table_x_and_y.keys():
+    score = table_x_and_y[(a,b)]
+    if ( score > max ):
+      max = score
+      (a,b) = (i,j)
+  return (a,b)
+
+\end{lstlisting}\\
+
+This approach to the problem just solves the previous problem twice, so it is still $O(mn)$.  Reversing strings takes $O(m)$ or $O(n)$.  Substring takes $O(1)$ or $O(n)$ depending on whether you copy the string or not.  Looking for the max takes $O(mn)$, so in total, this algorithm takes $O(mn)$.   
 \end{problemparts}
 \end{problems}
 
